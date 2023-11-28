@@ -21,7 +21,12 @@ async function main() {
     try {
       await Promise.all(Array.from(fonts).map(font => {
         if (font && typeof font === 'object' && 'family' in font && 'style' in font) {
-          return figma.loadFontAsync(font as FontName);
+          try {
+            return figma.loadFontAsync(font as FontName);
+          } catch (error) {
+            figma.closePlugin(`❌ Failed to load fonts. Please check if the ${(font as FontName).family} is installed and try again.`);
+            throw error;
+          }
         }
       }));
     } catch (error) {
@@ -91,8 +96,13 @@ async function main() {
             if (fontWeight !== figma.mixed) {
               const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(node.characters[i]);
               const newFont = getFontStyle(fontWeight as number, isKorean);
-              await figma.loadFontAsync(newFont);
-              node.setRangeFontName(i, i + 1, newFont);
+              try {
+                await figma.loadFontAsync(newFont);
+                node.setRangeFontName(i, i + 1, newFont);
+              } catch (error) {
+                figma.closePlugin(`❌ Failed to load fonts. Please check if the ${newFont.family} is installed and try again.`);
+                throw error;
+              }
               
               // Apply tracking value based on font size
               const fontSize = node.getRangeFontSize(i, i + 1);
