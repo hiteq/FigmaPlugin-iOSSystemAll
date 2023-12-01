@@ -85,130 +85,128 @@ async function main() {
   }
 
   // Load all fonts used in a node and its children, and change them to Apple SD Gothic Neo or SF Pro
-  async function loadFontsAndChange(node: SceneNode) {
-    if (node.type === 'TEXT' && node.visible && !node.locked && !node.removed && node.parent && node.parent.type !== 'INSTANCE') {
-      totalLayers++;
-      for (let i = 0; i < node.characters.length; i++) {
-        const fontName = node.getRangeFontName(i, i + 1);
-        if (fontName !== figma.mixed) {
-          try {
+  async function loadFontsAndChange(nodes: SceneNode[]) {
+    const promises = nodes.map(async (node) => {
+      if (node.type === 'TEXT' && node.visible && !node.locked && !node.removed && node.parent && node.parent.type !== 'INSTANCE') {
+        totalLayers++;
+        const fontPromises = [];
+        for (let i = 0; i < node.characters.length; i++) {
+          const fontName = node.getRangeFontName(i, i + 1);
+          if (fontName !== figma.mixed) {
             const fontWeight = node.getRangeFontWeight(i, i + 1);
             if (fontWeight !== figma.mixed) {
               const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(node.characters[i]);
               const newFont = getFontStyle(fontWeight as number, isKorean);
-              try {
-                await figma.loadFontAsync(newFont);
+              fontPromises.push(figma.loadFontAsync(newFont).then(() => {
                 node.setRangeFontName(i, i + 1, newFont);
-              } catch (error) {
-                figma.closePlugin(`❌ Failed to load fonts. Please check if the ${newFont.family} is installed and try again.`);
-                throw error;
-              }
-              
-              // Apply tracking value based on font size
-              const fontSize = node.getRangeFontSize(i, i + 1);
-              const trackingValues: { [key: number]: number } = {
-                6: 0.24,
-                7: 0.23,
-                8: 0.21,
-                9: 0.17,
-                10: 0.12,
-                11: 0.06,
-                12: 0,
-                13: -0.08,
-                14: -0.15,
-                15: -0.23,
-                16: -0.31,
-                17: -0.43,
-                18: -0.44,
-                19: -0.45,
-                20: -0.45,
-                21: -0.36,
-                22: -0.26,
-                23: -0.10,
-                24: 0.07,
-                25: 0.15,
-                26: 0.22,
-                27: 0.29,
-                28: 0.38,
-                29: 0.40,
-                30: 0.40,
-                31: 0.39,
-                32: 0.41,
-                33: 0.40,
-                34: 0.40,
-                35: 0.38,
-                36: 0.37,
-                37: 0.36,
-                38: 0.37,
-                39: 0.38,
-                40: 0.37,
-                41: 0.36,
-                42: 0.37,
-                43: 0.38,
-                44: 0.37,
-                45: 0.35,
-                46: 0.36,
-                47: 0.37,
-                48: 0.35,
-                49: 0.33,
-                50: 0.34,
-                51: 0.35,
-                52: 0.33,
-                53: 0.31,
-                54: 0.32,
-                56: 0.30,
-                58: 0.28,
-                60: 0.26,
-                62: 0.24,
-                64: 0.22,
-                66: 0.19,
-                68: 0.17,
-                70: 0.14,
-                72: 0.14,
-                76: 0.07,
-                80: 0,
-                84: 0,
-                88: 0,
-                92: 0,
-                96: 0
-                // ... other font sizes and their tracking values
-              };
-              const tracking = trackingValues[fontSize as number];
-              if (tracking !== undefined && !isKorean) {
-                node.setRangeLetterSpacing(i, i + 1, { value: tracking, unit: 'PIXELS' });
-              }
+
+                // Apply tracking value based on font size
+                const fontSize = node.getRangeFontSize(i, i + 1);
+                const trackingValues: { [key: number]: number } = {
+                  6: 0.24,
+                  7: 0.23,
+                  8: 0.21,
+                  9: 0.17,
+                  10: 0.12,
+                  11: 0.06,
+                  12: 0,
+                  13: -0.08,
+                  14: -0.15,
+                  15: -0.23,
+                  16: -0.31,
+                  17: -0.43,
+                  18: -0.44,
+                  19: -0.45,
+                  20: -0.45,
+                  21: -0.36,
+                  22: -0.26,
+                  23: -0.10,
+                  24: 0.07,
+                  25: 0.15,
+                  26: 0.22,
+                  27: 0.29,
+                  28: 0.38,
+                  29: 0.40,
+                  30: 0.40,
+                  31: 0.39,
+                  32: 0.41,
+                  33: 0.40,
+                  34: 0.40,
+                  35: 0.38,
+                  36: 0.37,
+                  37: 0.36,
+                  38: 0.37,
+                  39: 0.38,
+                  40: 0.37,
+                  41: 0.36,
+                  42: 0.37,
+                  43: 0.38,
+                  44: 0.37,
+                  45: 0.35,
+                  46: 0.36,
+                  47: 0.37,
+                  48: 0.35,
+                  49: 0.33,
+                  50: 0.34,
+                  51: 0.35,
+                  52: 0.33,
+                  53: 0.31,
+                  54: 0.32,
+                  56: 0.30,
+                  58: 0.28,
+                  60: 0.26,
+                  62: 0.24,
+                  64: 0.22,
+                  66: 0.19,
+                  68: 0.17,
+                  70: 0.14,
+                  72: 0.14,
+                  76: 0.07,
+                  80: 0,
+                  84: 0,
+                  88: 0,
+                  92: 0,
+                  96: 0
+                  // ... other font sizes and their tracking values
+                };
+                const tracking = trackingValues[fontSize as number];
+                if (tracking !== undefined && !isKorean) {
+                  node.setRangeLetterSpacing(i, i + 1, { value: tracking, unit: 'PIXELS' });
+                }
+              }));
             }
-          } catch (error) {
-            console.error('Error loading font:', error);
-            throw error;
           }
         }
+        await Promise.all(fontPromises);
+        processedLayers++;
       }
-      processedLayers++;
-    }
+    });
 
-    if ("children" in node) {
-      for (const child of node.children) {
-        if (child.visible && !child.locked && !child.removed) {
-          await loadFontsAndChange(child);
-        }
-      }
-    }
+    await Promise.all(promises);
   }
 
-    // If no layer is selected, notify the user and terminate the plugin.
-    if (figma.currentPage.selection.length === 0) {
-      figma.notify("Please select one or more layers", { timeout: 1500 });
-      figma.closePlugin();
-      return;
-    }
+  // If no layer is selected, notify the user and terminate the plugin.
+  if (figma.currentPage.selection.length === 0) {
+    figma.notify("Please select one or more layers", { timeout: 1500 });
+    figma.closePlugin();
+    return;
+  }
   // Preload all fonts.
   figma.notify("Plugin execution started");
   await preloadFonts();
 
-  for (const node of figma.currentPage.selection) {
-    if (node.visible && !node.locked && !node.removed) {
-      await loadFontsAndChange(node);
+  // 선택한 모든 텍스트 노드를 찾습니다
+  const textNodes: SceneNode[] = [];
+  figma.currentPage.selection.forEach((node: SceneNode) => {
+    if (node.type === 'TEXT') {
+      textNodes.push(node);
+    }
+  });
+
+  for (let i = 0; i < textNodes.length; i += 16) {
+    const nodes = textNodes.slice(i, i + 16);
+    if (nodes.every((node: SceneNode) => node.visible && !node.locked && !node.removed)) {
+      await loadFontsAndChange(nodes);
     }
   }
 
