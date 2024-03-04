@@ -1,5 +1,5 @@
 {
-  "name": "SF Pro with Apple SD Gothic Neo",
+  "name": "Korean iOS Syst’em All",
   "id": "1309740789101185152",
   "api": "1.0.0",
   "main": "code.js",
@@ -12,5 +12,6 @@
     "allowedDomains": [
       "none"
     ]
-  }
+  },
+  "documentAccess": "dynamic-page"
 }

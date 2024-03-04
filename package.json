@@ -1,7 +1,8 @@
 {
-  "name": "SF-Pro-with-Apple-SD-Gothic-Neo",
+  "name": "korean-ios-system-all",
   "version": "1.0.0",
-  "description": "Your Figma Plugin",
+  "description":
+    "This plugin automatically converts fonts in Text layers to Korean characters in Apple SD Gothic and English letters, numbers, and special characters in SF Pro, similar to the Korean iOS system fonts. It calculates and applies the corresponding values to maintain the same font weight. As of 2023, it uses the latest iOS font, SF Pro, and requires downloading and installing the font from Apple's official site for operation. Additionally, SF Pro is configured to detect the font size and automatically apply the unique letter spacing values characteristic of iOS.",
   "main": "code.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
