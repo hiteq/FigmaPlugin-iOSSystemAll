@@ -7,3 +7,4 @@ out/
 dist/
 code.js
 yarn.lock
+package-lock.json
