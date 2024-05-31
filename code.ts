@@ -3,6 +3,8 @@ async function main() {
   let totalLayers = 0;
   // Number of layers processed so far
   let processedLayers = 0;
+  // Number of characters changed
+  let changedCharacters = 0;
 
   // Preload only the fonts used in the current page's text nodes
   async function preloadFonts() {
@@ -41,49 +43,35 @@ async function main() {
   // Function to map CSS fontWeight to Apple SD Gothic Neo or SF Pro font style
   function getFontStyle(cssWeight: number, isKorean: boolean) {
     if (isKorean) {
-      if (cssWeight <= 149) {
-        return { family: 'Apple SD Gothic Neo', style: 'Thin' };
-      } else if (cssWeight >= 150 && cssWeight < 250) {
-        return { family: 'Apple SD Gothic Neo', style: 'UltraLight' };
-      } else if (cssWeight >= 250 && cssWeight < 350) {
-        return { family: 'Apple SD Gothic Neo', style: 'Light' };
-      } else if (cssWeight >= 350 && cssWeight < 450) {
-        return { family: 'Apple SD Gothic Neo', style: 'Regular' };
-      } else if (cssWeight >= 450 && cssWeight < 550) {
-        return { family: 'Apple SD Gothic Neo', style: 'Medium' };
-      } else if (cssWeight >= 550 && cssWeight < 650) {
-        return { family: 'Apple SD Gothic Neo', style: 'SemiBold' };
-      } else if (cssWeight >= 650 && cssWeight < 750) {
-        return { family: 'Apple SD Gothic Neo', style: 'Bold' };
-      } else if (cssWeight >= 750 && cssWeight < 850) {
-        return { family: 'Apple SD Gothic Neo', style: 'ExtraBold' };
-      } else if (cssWeight >= 850) {
-        return { family: 'Apple SD Gothic Neo', style: 'Heavy' };
-      } else {
-        return { family: 'Apple SD Gothic Neo', style: 'Regular' };
-      }
+      const styles = [
+        { max: 149, style: 'Thin' },
+        { max: 249, style: 'UltraLight' },
+        { max: 349, style: 'Light' },
+        { max: 449, style: 'Regular' },
+        { max: 549, style: 'Medium' },
+        { max: 649, style: 'SemiBold' },
+        { max: 749, style: 'Bold' },
+        { max: 849, style: 'ExtraBold' },
+        { max: Infinity, style: 'Heavy' }
+      ];
+      const styleObj = styles.find(s => cssWeight <= s.max);
+      const style = styleObj ? styleObj.style : 'Regular';
+      return { family: 'Apple SD Gothic Neo', style };
     } else {
-      if (cssWeight <= 149) {
-        return { family: 'SF Pro', style: 'Ultralight' };
-      } else if (cssWeight >= 150 && cssWeight < 250) {
-        return { family: 'SF Pro', style: 'Thin' };
-      } else if (cssWeight >= 250 && cssWeight < 350) {
-        return { family: 'SF Pro', style: 'Light' };
-      } else if (cssWeight >= 350 && cssWeight < 450) {
-        return { family: 'SF Pro', style: 'Regular' };
-      } else if (cssWeight >= 450 && cssWeight < 550) {
-        return { family: 'SF Pro', style: 'Medium' };
-      } else if (cssWeight >= 550 && cssWeight < 650) {
-        return { family: 'SF Pro', style: 'Semibold' };
-      } else if (cssWeight >= 650 && cssWeight < 750) {
-        return { family: 'SF Pro', style: 'Bold' };
-      } else if (cssWeight >= 750 && cssWeight < 850) {
-        return { family: 'SF Pro', style: 'Heavy' };
-      } else if (cssWeight >= 850) {
-        return { family: 'SF Pro', style: 'Black' };
-      } else {
-        return { family: 'SF Pro', style: 'Regular' };
-      }
+      const sfProStyles = [
+        { max: 149, style: 'Ultralight' },
+        { max: 249, style: 'Thin' },
+        { max: 349, style: 'Light' },
+        { max: 449, style: 'Regular' },
+        { max: 549, style: 'Medium' },
+        { max: 649, style: 'Semibold' },
+        { max: 749, style: 'Bold' },
+        { max: 849, style: 'Heavy' },
+        { max: Infinity, style: 'Black' }
+      ];
+      const sfProStyleObj = sfProStyles.find(s => cssWeight <= s.max);
+      const sfProStyle = sfProStyleObj ? sfProStyleObj.style : 'Regular';
+      return { family: 'SF Pro', style: sfProStyle };
     }
   }
 
@@ -100,6 +88,7 @@ async function main() {
 
         fontPromises.push(figma.loadFontAsync(newFont).then(() => {
           node.setRangeFontName(i, i + 1, newFont);
+          changedCharacters++; // Increment the changed characters count
 
           // Apply tracking value based on font size
           const fontSize = node.getRangeFontSize(i, i + 1);
@@ -168,7 +157,6 @@ async function main() {
             88: 0,
             92: 0,
             96: 0
-            // ... other font sizes and their tracking values
           };
           const tracking = trackingValues[fontSize as number];
           if (tracking !== undefined && !isKorean) {
@@ -200,7 +188,7 @@ async function main() {
     await loadFontsAndChange(node);
   }
 
-  figma.closePlugin(`Number of layers changed: ${processedLayers}`);
+  figma.closePlugin(`Layers changed: ${processedLayers}, Characters changed: ${changedCharacters}`);
 }
 
 main();
