@@ -2,7 +2,7 @@ console.clear();
 
 async function main() {
   // UI 생성
-  figma.showUI(__html__, { width: 240, height: 120, themeColors: true });
+  figma.showUI(__html__, { width: 240, height: 128, themeColors: true });
 
   // 전역 변수 선언
   let totalLayers = 0;
@@ -43,12 +43,34 @@ async function main() {
     checkSelection();
   });
 
+  // 언어 타입 정의
+  type Language = 'en' | 'ko';
+
+  // 상태 메시지 타입 정의
+  interface StatusMessages {
+    en: {
+      changed: string;
+      calculating: string;
+    };
+    ko: {
+      changed: string;
+      calculating: string;
+    };
+  }
+
   // UI로부터 메시지 수신
   figma.ui.onmessage = async (msg) => {
     if (msg.type === 'start-font-change') {
-      console.clear(); // 콘솔 초기화
+      // 즉시 UI 상태 업데이트
+      figma.ui.postMessage({
+        type: 'update-button-state',
+        state: 'processing'
+      });
+
+      console.clear();
       console.log('🚀 폰트 변경 작업 시작');
       const shouldApplyTracking = msg.applyTracking;
+      const lang = msg.lang as Language;
       console.log(`✓ 자간 적용 여부: ${shouldApplyTracking}`);
       
       // 카운터 초기화
@@ -57,38 +79,62 @@ async function main() {
       changedCharacters = 0;
       let totalCharacters = 0;
 
+      // 상태 메시지 정의
+      const statusMessages: StatusMessages = {
+        en: {
+          changed: 'Completed',
+          calculating: 'Calculating...',
+        },
+        ko: {
+          changed: '변경된 글자',
+          calculating: '계산 중...',
+        }
+      };
+
+      // 먼저 총 글자 수를 한 번에 계산
       console.log('📊 선택된 텍스트 분석 시작...');
-      // 먼저 총 글자 수 계산
       for (const node of figma.currentPage.selection) {
-        const nodeCharCount = countCharacters(node);
-        totalCharacters += nodeCharCount;
-        console.log(`  ↳ 텍스트 노드 발견: ${nodeCharCount}자`);
-        figma.ui.postMessage({
-          type: 'update-status',
-          message: `변경 완료: 0/${totalCharacters}`
-        });
+        totalCharacters += countCharacters(node);
       }
       console.log(`✓ 총 변경 대상: ${totalCharacters}자`);
 
+      // 총 글자 수 즉시 UI 업데이트
+      figma.ui.postMessage({
+        type: 'update-status',
+        message: `${statusMessages[lang].changed}: 0/${totalCharacters}`
+      });
+
       console.log('📥 폰트 프리로드 시작...');
-      // Preload all fonts and get font cache
       const fontCache = await preloadFonts();
       console.log(`✓ 폰트 캐시 생성 완료 (${fontCache.size}개 폰트)`);
 
       console.log('�� 폰트 변경 작업 실행...');
       // Process all selected nodes and their descendants
       for (const node of figma.currentPage.selection) {
-        await loadFontsAndChange(node, fontCache, shouldApplyTracking, totalCharacters);
+        await loadFontsAndChange(node, fontCache, shouldApplyTracking, totalCharacters, statusMessages, lang);
       }
 
       console.log('✨ 작업 완료');
       console.log(`  ↳ 처리된 레이어: ${processedLayers}`);
       console.log(`  ↳ 변경된 글자: ${changedCharacters}/${totalCharacters}`);
 
-      // 상태 텍스트 업데이트: 작업 완료
+      // 일정 시간 간격으로만 UI 업데이트
+      const currentTime = Date.now();
+      const updateInterval = 16; // 약 60fps에 해당하는 시간 간격
+      let lastUpdateTime = Date.now();
+
+      if (currentTime - lastUpdateTime >= updateInterval) {
+        figma.ui.postMessage({
+          type: 'update-status',
+          message: `${statusMessages[lang].changed}: ${changedCharacters}/${totalCharacters}`
+        });
+        lastUpdateTime = currentTime;
+      }
+
+      // 작업 완료 시
       figma.ui.postMessage({
         type: 'process-complete',
-        message: `변경 완료: ${changedCharacters}/${totalCharacters}`
+        message: `${statusMessages[lang].changed}: ${changedCharacters}/${totalCharacters}`
       });
     }
   };
@@ -188,7 +234,14 @@ async function main() {
   }
 
   // Load all fonts used in a node and its children, and change them to Apple SD Gothic Neo or SF Pro
-  async function loadFontsAndChange(node: SceneNode, fontCache: Map<string, FontName>, shouldApplyTracking: boolean, totalCharacters: number) {
+  async function loadFontsAndChange(
+    node: SceneNode, 
+    fontCache: Map<string, FontName>, 
+    shouldApplyTracking: boolean, 
+    totalCharacters: number,
+    statusMessages: StatusMessages,
+    lang: Language
+  ) {
     if (node.type === 'TEXT' && node.visible && !node.locked && !node.removed) {
       totalLayers++;
       const characters = node.characters;
@@ -287,7 +340,7 @@ async function main() {
         if (currentTime - lastUpdateTime >= updateInterval) {
           figma.ui.postMessage({
             type: 'update-status',
-            message: `변경 완료: ${changedCharacters}/${totalCharacters}`
+            message: `${statusMessages[lang].changed}: ${changedCharacters}/${totalCharacters}`
           });
           lastUpdateTime = currentTime;
         }
@@ -295,7 +348,7 @@ async function main() {
       processedLayers++;
     } else if ("children" in node) {
       for (const child of node.children) {
-        await loadFontsAndChange(child, fontCache, shouldApplyTracking, totalCharacters);
+        await loadFontsAndChange(child, fontCache, shouldApplyTracking, totalCharacters, statusMessages, lang);
       }
     }
   }
