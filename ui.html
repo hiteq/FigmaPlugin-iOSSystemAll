@@ -1,0 +1,155 @@
+<div class="wrapper">
+  <div class="section">
+    <label class="checkbox">
+      <input type="checkbox" id="applyTracking" class="checkbox__input" checked>
+      <span id="checkboxLabel" class="checkbox__label"></span>
+    </label>
+  </div>
+  <div class="section">
+    <button id="startButton" class="button button--primary" disabled></button>
+  </div>
+  <div class="section">
+    <span id="statusText" class="status-text"></span>
+  </div>
+</div>
+
+<style>
+  .wrapper {
+    padding: 6px;
+    background-color: var(--figma-color-bg);
+  }
+
+  .section {
+    margin-bottom: 10px;
+  }
+
+  .checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .checkbox__label {
+    font-size: 12px;
+    color: var(--figma-color-text);
+  }
+
+  .checkbox__link {
+    color: var(--figma-color-text-brand);
+    text-decoration: none;
+  }
+
+  .checkbox__link:hover {
+    text-decoration: underline;
+  }
+
+  .button {
+    width: 100%;
+    background-color: var(--figma-color-bg-brand);
+    color: var(--figma-color-text-onbrand);
+    height: 40px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+  }
+
+  .button--processing,
+  .button:disabled {
+    background-color: var(--figma-color-bg-disabled);
+    color: var(--figma-color-text-disabled);
+    cursor: not-allowed;
+  }
+
+  .status-text {
+    font-size: 12px;
+    color: var(--figma-color-text-secondary);
+  }
+</style>
+
+<script>
+const startButton = document.getElementById('startButton');
+const statusText = document.getElementById('statusText');
+const checkboxLabel = document.getElementById('checkboxLabel');
+
+// 레이블 변수
+const labels = {
+  en: {
+    checkbox: {
+      prefix: 'Apply ',
+      link: 'Apple official tracking values',
+      url: 'https://developer.apple.com/design/human-interface-guidelines/typography#iOS-iPadOS-visionOS-tracking-values'
+    },
+    startButton: 'Start Font Change',
+    statusText: 'Completed: 0/0',
+    processing: 'Processing...',
+    complete: 'Font Change Complete',
+    selectLayer: 'Please select a text layer',
+    noSelection: 'Please select a target to change'
+  },
+  ko: {
+    checkbox: {
+      prefix: '',
+      link: '애플 공식 자간 값',
+      url: 'https://developer.apple.com/design/human-interface-guidelines/typography#iOS-iPadOS-visionOS-tracking-values'
+    },
+    startButton: '폰트 변경 시작',
+    statusText: '변경 완료: 0/0',
+    processing: '처리 중...',
+    complete: '폰트 변경 완료',
+    selectLayer: '텍스트 레이어를 선택해주세요',
+    noSelection: '변경할 대상을 선택해주세요'
+  }
+};
+
+// 시스템 언어에 따라 레이블 선택
+const lang = navigator.language.startsWith('ko') ? 'ko' : 'en';
+const currentLabels = labels[lang];
+
+// 레이블 설정
+checkboxLabel.innerHTML = `${currentLabels.checkbox.prefix}<a href="${currentLabels.checkbox.url}" class="checkbox__link" target="_blank">${currentLabels.checkbox.link}</a> 적용`;
+startButton.textContent = currentLabels.noSelection;
+statusText.textContent = currentLabels.statusText;
+
+// 플러그인으로부터 메시지 수신
+onmessage = (event) => {
+  const msg = event.data.pluginMessage;
+  
+  if (msg.type === 'selection-change') {
+    startButton.disabled = !msg.hasValidSelection;
+    
+    if (!msg.hasValidSelection) {
+      startButton.textContent = currentLabels.noSelection;
+      startButton.title = currentLabels.selectLayer;
+    } else {
+      startButton.textContent = currentLabels.startButton;
+      startButton.title = '';
+    }
+  } else if (msg.type === 'update-status') {
+    statusText.textContent = msg.message;
+  } else if (msg.type === 'disable-button') {
+    startButton.disabled = true;
+    startButton.textContent = currentLabels.processing;
+    startButton.classList.add('button--processing');
+  } else if (msg.type === 'process-complete') {
+    statusText.textContent = msg.message;
+    startButton.textContent = currentLabels.startButton;
+    startButton.disabled = false;
+    startButton.classList.remove('button--processing');
+  }
+};
+
+startButton.onclick = () => {
+  startButton.disabled = true;
+  startButton.textContent = currentLabels.processing;
+  startButton.classList.add('button--processing');
+  statusText.textContent = `변경 완료: 0/0`;
+  const applyTracking = document.getElementById('applyTracking').checked;
+  parent.postMessage({ 
+    pluginMessage: { 
+      type: 'start-font-change',
+      applyTracking 
+    }
+  }, '*');
+}
+</script> 
