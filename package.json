@@ -1,8 +1,7 @@
 {
   "name": "korean-ios-system-all",
   "version": "1.0.0",
-  "description":
-    "This plugin automatically converts fonts in Text layers to Korean characters in Apple SD Gothic and English letters, numbers, and special characters in SF Pro, similar to the Korean iOS system fonts. It calculates and applies the corresponding values to maintain the same font weight. As of 2023, it uses the latest iOS font, SF Pro, and requires downloading and installing the font from Apple's official site for operation. Additionally, SF Pro is configured to detect the font size and automatically apply the unique letter spacing values characteristic of iOS.",
+  "description": "This plugin automatically converts fonts in Text layers to Korean characters in Apple SD Gothic and English letters, numbers, and special characters in SF Pro, similar to the Korean iOS system fonts. It calculates and applies the corresponding values to maintain the same font weight. As of 2023, it uses the latest iOS font, SF Pro, and requires downloading and installing the font from Apple's official site for operation. Additionally, SF Pro is configured to detect the font size and automatically apply the unique letter spacing values characteristic of iOS.",
   "main": "code.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -12,10 +11,11 @@
   "license": "",
   "devDependencies": {
     "@figma/eslint-plugin-figma-plugins": "^0.14.0",
-    "@figma/plugin-typings": "^1.87.0",
-    "@typescript-eslint/eslint-plugin": "^7.1.0",
-    "@typescript-eslint/parser": "^7.1.0",
-    "eslint": "^8.57.0",
-    "typescript": "^5.3.3"
-  }
+    "@figma/plugin-typings": "1.87.0",
+    "@typescript-eslint/eslint-plugin": "7.18.0",
+    "@typescript-eslint/parser": "7.18.0",
+    "eslint": "8.57.1",
+    "typescript": "5.9.3"
+  },
+  "packageManager": "yarn@4.4.0+sha512.91d93b445d9284e7ed52931369bc89a663414e5582d00eea45c67ddc459a2582919eece27c412d6ffd1bd0793ff35399381cb229326b961798ce4f4cc60ddfdb"
 }

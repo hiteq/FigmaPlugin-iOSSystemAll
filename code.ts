@@ -2,7 +2,7 @@ console.clear();
 
 async function main() {
   // UI 생성
-  figma.showUI(__html__, { width: 240, height: 128, themeColors: true });
+  figma.showUI(__html__, { width: 280, height: 128, themeColors: true });
 
   // 전역 변수 선언
   let totalLayers = 0;
